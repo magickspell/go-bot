@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -14,6 +15,7 @@ func main() {
 	godotenv.Load()
 
 	var token string = os.Getenv("TOKEN")
+	fmt.Println("token: " + token)
 
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
@@ -37,10 +39,24 @@ func main() {
 			log.Println("")
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, "You wrote:"+update.Message.Text)
-			msg.ReplyToMessageID = update.Message.MessageID // делаем реплай на введеное сообщение
-
-			bot.Send(msg)
+			switch update.Message.Command() {
+			case "help":
+				helpCommand(bot, update.Message)
+			default:
+				defaultBehavior(bot, update.Message)
+			}
 		}
 	}
+}
+
+func helpCommand(bot *tgbotapi.BotAPI, inputMessage *tgbotapi.Message) {
+	msg := tgbotapi.NewMessage(inputMessage.Chat.ID, "/help - help")
+	bot.Send(msg)
+}
+
+func defaultBehavior(bot *tgbotapi.BotAPI, inputMessage *tgbotapi.Message) {
+	msg := tgbotapi.NewMessage(inputMessage.Chat.ID, "You wrote: "+inputMessage.Text)
+	msg.ReplyToMessageID = inputMessage.MessageID // делаем реплай на введеное сообщение
+
+	bot.Send(msg)
 }
