@@ -7,11 +7,15 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
+	"github.com/magickspell/go-bot/internal/app/commands"
+	"github.com/magickspell/go-bot/internal/service/product"
 )
 
 // const token string = "TOKEN"
 
 func main() {
+	productService := product.NewService()
+
 	godotenv.Load()
 
 	var token string = os.Getenv("TOKEN")
@@ -21,6 +25,8 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	commander := commands.NewCommander(bot, productService)
 
 	bot.Debug = true
 
@@ -39,24 +45,15 @@ func main() {
 			log.Println("")
 			log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
 
-			switch update.Message.Command() {
-			case "help":
-				helpCommand(bot, update.Message)
-			default:
-				defaultBehavior(bot, update.Message)
-			}
+			// switch update.Message.Command() {
+			// case "help":
+			// 	commander.Help(update.Message)
+			// case "list":
+			// 	commander.List(update.Message)
+			// default:
+			// 	commander.Default(update.Message)
+			// }
+			commander.HandleUpdate(update)
 		}
 	}
-}
-
-func helpCommand(bot *tgbotapi.BotAPI, inputMessage *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(inputMessage.Chat.ID, "/help - help")
-	bot.Send(msg)
-}
-
-func defaultBehavior(bot *tgbotapi.BotAPI, inputMessage *tgbotapi.Message) {
-	msg := tgbotapi.NewMessage(inputMessage.Chat.ID, "You wrote: "+inputMessage.Text)
-	msg.ReplyToMessageID = inputMessage.MessageID // делаем реплай на введеное сообщение
-
-	bot.Send(msg)
 }
