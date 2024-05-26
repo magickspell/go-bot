@@ -40,6 +40,8 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u) // очередь апдейтов
 
+	// panic("test panic") // типа точка остановы что бы не идти дальше
+
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			log.Println("")
