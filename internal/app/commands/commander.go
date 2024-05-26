@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -14,6 +16,10 @@ type Commander struct {
 	productService *product.Service
 }
 
+type CommandData struct {
+	Offset int `json:"offset"`
+}
+
 func NewCommander(bot *tgbotapi.BotAPI, productService *product.Service) *Commander {
 	return &Commander{
 		bot: bot,
@@ -23,13 +29,24 @@ func NewCommander(bot *tgbotapi.BotAPI, productService *product.Service) *Comman
 func (c *Commander) HandleUpdate(update tgbotapi.Update) {
 	// mutex := sync.Mutex{} // mutex - это способ организации синхронной работы с данными между горутинами
 	// mutex.Lock()
-	// defer mutex.Unlock()
+	// defer mutex.Unlock() // несколько defer кладудться в стек выполнения
 	// defer deferFunc() // функция выполнится даже когда все упало (паника например panic())
 	defer func() { // но не нужно обрабатывать исключения через эту штуку!
 		if panicValue := recover(); panicValue != nil {
 			log.Printf("recovered from panic")
 		}
 	}()
+
+	if update.CallbackQuery != nil { // парсим дату сообщения
+		parsedData := CommandData{}
+		json.Unmarshal([]byte(update.CallbackQuery.Data), &parsedData)
+		msg := tgbotapi.NewMessage(
+			update.CallbackQuery.Message.Chat.ID,
+			fmt.Sprintf("Parsed: %+v\n", parsedData),
+		)
+		c.bot.Send(msg)
+		return
+	}
 
 	command, ok := registredCommands[update.Message.Command()]
 	if ok {

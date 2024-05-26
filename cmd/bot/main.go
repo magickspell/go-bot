@@ -12,6 +12,7 @@ import (
 )
 
 // const token string = "TOKEN"
+// в lunch.json написана отладка для .vscode, для этого надо указывать в конфиг go: "go.goroot": "/snap/go/current"
 
 func main() {
 	productService := product.NewService()
